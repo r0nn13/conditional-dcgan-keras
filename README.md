@@ -16,7 +16,7 @@ Usage
   python dcgan.py --mode train --path ~/images --batch_size 128
 
 **Image generation:**
-`python dcgan.py --mode generate --path <path_to_images> --batch_size <batch_size>`
+`python dcgan.py --mode generate --batch_size <batch_size>`
 
-python dcgan.py --mode generate --path ~/images --batch_size 128
+python dcgan.py --mode generate --batch_size 128
 
