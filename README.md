@@ -1,6 +1,5 @@
 ## KERAS-DCGAN ##
-Implementation of http://arxiv.org/abs/1511.06434 with the (awesome) [keras](https://github.com/fchollet/keras) library,
-for generating artificial images with deep learning.
+Implementation of http://arxiv.org/abs/1511.06434 with the (awesome) [keras](https://github.com/fchollet/keras) library, for generating artificial images with deep learning.
 
 This trains two adversarial deep learning models on real images, in order to produce artificial images that look real.
 
