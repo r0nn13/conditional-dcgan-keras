@@ -38,7 +38,7 @@ def generator_model():
     model.add(Activation('tanh'))
     return model
 
-def descriminator_model():
+def discriminator_model():
     model = Sequential()
     model.add(Convolution2D(128, 5, 5, subsample=(2, 2), input_shape=(3, 64, 64), border_mode = 'same'))
     model.add(LeakyReLU(0.2))
@@ -57,11 +57,11 @@ def descriminator_model():
     model.add(Activation('sigmoid'))
     return model
 
-def generator_containing_descriminator(generator, descriminator):
+def generator_containing_discriminator(generator, discriminator):
     model = Sequential()
     model.add(generator)
-    descriminator.trainable = False
-    model.add(descriminator)
+    discriminator.trainable = False
+    model.add(discriminator)
     return model
 
 def load_image(path):
@@ -79,14 +79,14 @@ def train(path, BATCH_SIZE):
     paths = glob.glob(os.path.join(path, "*.jpg"))
     print "Got paths.."
 
-    descriminator = descriminator_model()
+    discriminator = discriminator_model()
     generator = generator_model()
-    descriminator_on_generator = generator_containing_descriminator(generator, descriminator)
+    discriminator_on_generator = generator_containing_discriminator(generator, discriminator)
     adam=Adam(lr=0.0002, beta_1=0.5, beta_2=0.999, epsilon=1e-08)
     generator.compile(loss='binary_crossentropy', optimizer=adam)
-    descriminator_on_generator.compile(loss='binary_crossentropy', optimizer=adam)
-    descriminator.trainable = True
-    descriminator.compile(loss='binary_crossentropy', optimizer=adam)
+    discriminator_on_generator.compile(loss='binary_crossentropy', optimizer=adam)
+    discriminator.trainable = True
+    discriminator.compile(loss='binary_crossentropy', optimizer=adam)
 
     for epoch in range(5):
         print "Epoch is", epoch
@@ -106,8 +106,8 @@ def train(path, BATCH_SIZE):
             X = np.concatenate((image_batch, generated_images))
             
             y = [1] * BATCH_SIZE + [0] * BATCH_SIZE
-            print "Batch", index, "Training descriminator.."
-            d_loss = descriminator.train_on_batch(X, y)
+            print "Batch", index, "Training discriminator.."
+            d_loss = discriminator.train_on_batch(X, y)
 
             for j in range(1):
                 noise = np.zeros((BATCH_SIZE, 100))
@@ -116,17 +116,15 @@ def train(path, BATCH_SIZE):
 
                 
                 print "Training generator.."
-                g_loss = descriminator_on_generator.train_on_batch(noise, [1] * BATCH_SIZE)
-                print "Generator loss", g_loss, "Descriminator loss", d_loss, "Total:", g_loss[0] + d_loss[0]
+                g_loss = discriminator_on_generator.train_on_batch(noise, [1] * BATCH_SIZE)
+                print "Generator loss", g_loss, "Discriminator loss", d_loss, "Total:", g_loss[0] + d_loss[0]
 
             if index % 10 == 9:
                 print 'Saving weights..'
                 generator.save_weights('generator', True)
-                descriminator.save_weights('descriminator', True)
+                discriminator.save_weights('discriminator', True)
 
-
-def generate():
-    BATCH_SIZE = 32
+def generate(BATCH_SIZE):
     generator = generator_model()
     adam=Adam(lr=0.0002, beta_1=0.5, beta_2=0.999, epsilon=1e-08)
     generator.compile(loss='binary_crossentropy', optimizer=adam)
@@ -152,9 +150,8 @@ def get_args():
 
 if __name__ == "__main__":
     args = get_args()
-    path = args.path
 
     if args.mode == "train":
         train(path = args.path, BATCH_SIZE = args.batch_size)
     elif args.mode == "generate":
-        generate()
+        generate(BATCH_SIZE = args.batch_size)
