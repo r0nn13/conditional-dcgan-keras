@@ -81,8 +81,8 @@ def train(BATCH_SIZE):
     generator = generator_model()
     discriminator_on_generator = \
         generator_containing_discriminator(generator, discriminator)
-    d_optim = SGD(lr=0.0005, momentum=0.6, nesterov=True)
-    g_optim = SGD(lr=0.0005, momentum=0.6, nesterov=True)
+    d_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
+    g_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
     generator.compile(loss='binary_crossentropy', optimizer="SGD")
     discriminator_on_generator.compile(
         loss='binary_crossentropy', optimizer=g_optim)
@@ -118,23 +118,46 @@ def train(BATCH_SIZE):
                 discriminator.save_weights('discriminator', True)
 
 
-def generate(BATCH_SIZE):
+def generate(BATCH_SIZE, nice=False):
     generator = generator_model()
     generator.compile(loss='binary_crossentropy', optimizer="SGD")
     generator.load_weights('generator')
-    noise = np.zeros((BATCH_SIZE, 100))
-    for i in range(BATCH_SIZE):
-        noise[i, :] = np.random.uniform(-1, 1, 100)
-    generated_images = generator.predict(noise, verbose=1)
-    image = combine_images(generated_images)
+    if nice:
+        discriminator = discriminator_model()
+        discriminator.compile(loss='binary_crossentropy', optimizer="SGD")
+        discriminator.load_weights('discriminator')
+        noise = np.zeros((BATCH_SIZE*20, 100))
+        for i in range(BATCH_SIZE*20):
+            noise[i, :] = np.random.uniform(-1, 1, 100)
+        generated_images = generator.predict(noise, verbose=1)
+        d_pret = discriminator.predict(generated_images, verbose=1)
+        index = np.arange(0, BATCH_SIZE*20)
+        index.resize((BATCH_SIZE*20, 1))
+        pre_with_index = list(np.append(d_pret, index, axis=1))
+        pre_with_index.sort(key=lambda x: x[0], reverse=True)
+        nice_images = np.zeros((BATCH_SIZE, 1) +
+                               (generated_images.shape[2:]), dtype=np.float32)
+        for i in range(int(BATCH_SIZE)):
+            idx = int(pre_with_index[i][1])
+            nice_images[i, 0, :, :] = generated_images[idx, 0, :, :]
+        image = combine_images(nice_images)
+    else:
+        noise = np.zeros((BATCH_SIZE, 100))
+        for i in range(BATCH_SIZE):
+            noise[i, :] = np.random.uniform(-1, 1, 100)
+        generated_images = generator.predict(noise, verbose=1)
+        image = combine_images(generated_images)
     image = image*127.5+127.5
-    Image.fromarray(image.astype(np.uint8)).save("generated_image.png")
+    Image.fromarray(image.astype(np.uint8)).save(
+        "generated_image.png")
 
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str)
     parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--nice", dest="nice", action="store_true")
+    parser.set_defaults(nice=False)
     args = parser.parse_args()
     return args
 
@@ -143,4 +166,4 @@ if __name__ == "__main__":
     if args.mode == "train":
         train(BATCH_SIZE=args.batch_size)
     elif args.mode == "generate":
-        generate(BATCH_SIZE=args.batch_size)
+        generate(BATCH_SIZE=args.batch_size, nice=args.nice)
