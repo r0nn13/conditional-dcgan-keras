@@ -24,7 +24,7 @@ python dcgan.py --mode generate --batch_size 128
 
 ## Result
 
-**generated images :** **
+**generated images :** 
 
 ![generated_image.png](./assets/generated_image.png)
 
