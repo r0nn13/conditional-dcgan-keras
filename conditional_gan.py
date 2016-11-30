@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# File: Image2Image.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
-
 import numpy as np
 import glob, pickle
 import os, sys
@@ -23,14 +18,7 @@ from keras import backend as K
 from keras.layers.normalization import BatchNormalization
 import math
 K.set_image_dim_ordering('th') 
-"""
-To train:
-    ./Image2Image.py --data /path/to/datadir --mode {AtoB,BtoA}
-    # datadir should contain 512x256 images formed by A and B
 
-To visualize:
-    ./Image2Image.py --sample --data /path/to/test/datadir --mode {AtoB,BtoA} --load pretrained.model
-"""
 img_rows = 256
 img_cols = 256
 SHAPE = 256
@@ -44,7 +32,7 @@ BATCH_SIZE = 10
 def generator_model():
     global BATCH_SIZE
     # imgs: input: 256x256xch
-    # U-Net structure, slightly different from the original on the location of lrelu/lrelu
+    # U-Net structure, must change to relu
     inputs = Input((IN_CH, img_cols, img_rows))
     
     e1 = BatchNormalization(mode=2)(inputs)
@@ -67,12 +55,6 @@ def generator_model():
     e7 = BatchNormalization(mode=2)(e7)
     e8 = Convolution2D(512, 4, 4, subsample=(2,2),  activation='relu',init='uniform', border_mode='same')(e7)
     e8 = BatchNormalization(mode=2)(e8)
-
-    #pool4 = BatchNormalization(mode=2)(pool4)
-    #conv5 = Convolution2D(512, 4, 4,  activation='relu',init='uniform', border_mode='same')(pool4)
-    #conv5 = BatchNormalization(mode=2)(conv5)
-    #conv5 = Convolution2D(512, 4, 4,  activation='relu',init='uniform', border_mode='same')(conv5)
-    #conv5 = BatchNormalization(mode=2)(conv5)
     
     d1 = Deconvolution2D(512, 5, 5, subsample=(2,2),  activation='relu',init='uniform', output_shape=(None, 512, 2, 2), border_mode='same')(e8)
     d1 = merge([d1, e7], mode='concat', concat_axis=1)
@@ -132,10 +114,7 @@ def discriminator_model():
     model.add(Convolution2D(1, 4, 4,border_mode='same'))
     model.add(BatchNormalization(mode=2))
     model.add(Activation('tanh'))
-    #model.add(Flatten())
-    #model.add(Dense(1024))
-    #model.add(Activation('tanh'))
-    #model.add(Dense(1))
+    
     model.add(Activation('sigmoid'))
     return model
 
@@ -291,16 +270,6 @@ def get_data(datadir):
         data_Y[i,:,:,:] = Y
         i = i+1
     return data_X, data_Y
-
-def sample(datadir, model_path):
-    imgs = glob.glob(os.path.join(datadir, '*.jpg'))
-    #ds = ImageFromFile(imgs, channel=3, shuffle=True)
-    #ds = BatchData(MapData(ds, lambda dp: split_input(dp[0])), 6)
-
-    #pred = SimpleDatasetPredictor(pred, ds)
-    #for o in pred.get_result():
-    #    o = o[0][:,:,:,::-1]
-    #    viz = next(build_patch_list(o, nr_row=3, nr_col=2, viz=True))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
