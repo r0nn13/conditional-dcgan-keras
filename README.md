@@ -1,10 +1,10 @@
-## KERAS-CONDITIONAL GAN ##
+## KERAS CONDITIONAL GAN ##
 
-Implementation of conditional GAN https://arxiv.org/abs/1411.1784 with [keras](https://github.com/fchollet/keras).
+Implementation of conditional DCGAN https://arxiv.org/abs/1411.1784 with [keras](https://github.com/fchollet/keras).
 
 Implements the improvements and architecture of https://arxiv.org/pdf/1611.07004v1.pdf.
 
-Code borrows from the Keras non-conditional GAN https://github.com/jacobgil/keras-dcgan and the Torch conditional GAN https://github.com/ppwwyyxx/tensorpack/blob/master/examples/GAN/Image2Image.py.
+Code borrows from the Keras DCGAN https://github.com/jacobgil/keras-dcgan and the Torch conditional GAN https://github.com/ppwwyyxx/tensorpack/blob/master/examples/GAN/Image2Image.py.
 
 ---
 
